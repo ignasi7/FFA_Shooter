@@ -23,6 +23,10 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	// Spring Arm Component
+	UPROPERTY(EditAnywhere)
+	class USpringArmComponent* SpringArm;
+
 	UPROPERTY(EditAnywhere)
 	class UCameraComponent* Camera;
 
@@ -38,6 +42,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	class UInputAction* LookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	class UInputAction* AimAction;
 
 	// Input mapping context
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -55,6 +62,18 @@ public:
 	void Look(const FInputActionValue& Value);
 	void Jump();
 	void StopJumping();
+
+	// Methods to manage FOV
+	void StartFOVTransition(float NewFOV, float Duration);
+	void UpdateFOV(float DeltaTime);
+
+	// Methods to start and stop sprinting
+	void StartSprinting();
+	void StopSprinting();
+
+	// Methods to start and stop aiming
+	void StartAiming();
+	void StopAiming();
 
 
 private:
@@ -90,17 +109,15 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	float TransitionDurationFOV;
 
+	// Current FOV transition Duration
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	float CurrentTransitionDurationFOV;
+
 	// FOV Transition Elapsed Time
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	float ElapsedTimeTransitionFOV;
 
-	// Methods to manage FOV
-	void StartFOVTransition(float NewFOV, float Duration);
-	void UpdateFOV(float DeltaTime);
-
-
-	// Methods to start and stop sprinting
-	void StartSprinting();
-	void StopSprinting();
-
+	// Is Aiming Boleean
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool IsAiming;
 };

@@ -2,6 +2,7 @@
 
 
 #include "PlayerCharacter.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -17,8 +18,16 @@ APlayerCharacter::APlayerCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Create the SpringArm and attach it to the RootComponent
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	SpringArm->SetupAttachment(RootComponent);
+	SpringArm->TargetArmLength = 300.0f; // Set the distance of the camera from the character
+	SpringArm->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Player Camera"));
-	Camera->SetupAttachment(RootComponent);
+	Camera->SetupAttachment(SpringArm);
+	Camera->bUsePawnControlRotation = false; // We don't want the camera to rotate on its own
+
 
 	// Set default values for input actions and mapping context
 	MoveAction = nullptr;
@@ -28,18 +37,23 @@ APlayerCharacter::APlayerCharacter()
 
 	// Initialize the walking and sprinting speeds
 	BaseRunSpeed = 600.0f; // Normal run speed
-	SprintSpeed = 1200.0f;  // Speed when sprinting
+	SprintSpeed = 1000.0f;  // Speed when sprinting
 
 	// Initialize the sprinting state
 	bIsSprinting = false; // Not sprinting initially
 
 	// Initialize FOV variables
 	NormalFOV = 90.0f; // Default values
-	SprintFOV = 120.0f;
+	SprintFOV = 100.0f;
 	AimingFOV = 60.0f;
 	TargetFOV = NormalFOV;
-	TransitionDurationFOV = 2.0f;
+	TransitionDurationFOV = 0.4f;
+	CurrentTransitionDurationFOV = 0.0f;
 	ElapsedTimeTransitionFOV = 0.0f;
+
+	// Initialize aiming variables
+	IsAiming = false;
+	AimingFOV = 50.0f;
 
 }
 
@@ -68,16 +82,13 @@ void APlayerCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// Update the FOV if needed
-	if (TransitionDurationFOV > 0.0f)
+	if (CurrentTransitionDurationFOV > 0.0f)
 	{
+		/*FString FOVString = FString::Printf(TEXT("FieldOfView: %f"), Camera->FieldOfView);
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FOVString);
+		*/ 
 		UpdateFOV(DeltaTime);
 	}
-
-	FString FOVString = FString::Printf(TEXT("FieldOfView: %f"), Camera->FieldOfView);
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FOVString);
-
-
-
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -104,8 +115,13 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		}
 		if (SprintAction)
 		{
-			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &APlayerCharacter::StartSprinting);
+			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &APlayerCharacter::StartSprinting);
 			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopSprinting);
+		}
+		if (SprintAction)
+		{
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &APlayerCharacter::StartAiming);
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopAiming);
 		}
 
 	}
@@ -117,6 +133,7 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	FVector2D MovementVector = Value.Get<FVector2D>();
 	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
 	AddMovementInput(GetActorRightVector(), MovementVector.X);
+
 }
 
 void APlayerCharacter::Jump()
@@ -133,7 +150,8 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D MouseMovement = Value.Get<FVector2D>();
 	AddControllerYawInput(MouseMovement.X);
-	AddControllerPitchInput(MouseMovement.Y);
+	AddControllerPitchInput(-MouseMovement.Y);
+
 }
 
 
@@ -141,7 +159,7 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 void APlayerCharacter::StartFOVTransition(float NewFOV, float Duration)
 {
 	TargetFOV = NewFOV;
-	TransitionDurationFOV = Duration;
+	CurrentTransitionDurationFOV = Duration;
 	ElapsedTimeTransitionFOV = 0.0f; // Reset elapsed time
 }
 
@@ -159,16 +177,32 @@ void APlayerCharacter::UpdateFOV(float DeltaTime)
 	// Stop transition if complete
 	if (Alpha >= 1.0f)
 	{
-		TransitionDurationFOV = 0.0f; // Stop updating
+		CurrentTransitionDurationFOV = 0.0f; // Stop updating
 	}
 }
 
 // Method to start sprinting
 void APlayerCharacter::StartSprinting()
 {
-	bIsSprinting = true; // Set the sprinting state to true
-	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed; // Set character speed to sprint speed
-	StartFOVTransition(SprintFOV, TransitionDurationFOV);
+	if (!IsAiming)
+	{
+		// Get the character's current velocity
+		FVector Velocity = GetCharacterMovement()->Velocity;
+
+		// Calculate the magnitude of the velocity vector
+		float Speed = Velocity.Size();
+
+		// Define a minimum speed threshold for sprinting
+		const float MinimumSpeedThreshold = 1.0f; // Adjust this value as needed
+
+		// Only start sprinting if the character is moving faster than the threshold
+		if (Speed > MinimumSpeedThreshold)
+		{
+			bIsSprinting = true; // Set the sprinting state to true
+			GetCharacterMovement()->MaxWalkSpeed = SprintSpeed; // Set character speed to sprint speed
+			StartFOVTransition(SprintFOV, TransitionDurationFOV);
+		}
+	}
 }
 
 // Method to stop sprinting
@@ -179,6 +213,28 @@ void APlayerCharacter::StopSprinting()
 	StartFOVTransition(NormalFOV, TransitionDurationFOV);
 }
 
+void APlayerCharacter::StartAiming()
+{
+	IsAiming = true;
+	if (bIsSprinting)
+	{
+		StopSprinting();
+	}
+	StartFOVTransition(AimingFOV, TransitionDurationFOV);
+}
 
+void APlayerCharacter::StopAiming()
+{
+	IsAiming = false;
+	if (bIsSprinting)
+	{
+		StartFOVTransition(SprintFOV, TransitionDurationFOV);
+	}
+	else
+	{
+		StartFOVTransition(NormalFOV, TransitionDurationFOV);
+
+	}
+}
 
 
