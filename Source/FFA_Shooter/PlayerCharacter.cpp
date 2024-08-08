@@ -62,6 +62,19 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Ensure the Animation Blueprint is associated
+	/*if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		// Check if the Animation Blueprint is of the correct type
+		if(BP_Character_Anim* AnimBP = Cast<UYourAnimationBlueprint>(AnimInstance))
+		{
+			// Update Animation Blueprint variables with the current mouse values
+			YourAnimBP->SetMousePitch(MousePitch);
+			YourAnimBP->SetMouseYaw(MouseYaw);
+		}
+	}*/
+
+
 	// Check if we have a valid player controller and subsystem
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
@@ -149,8 +162,12 @@ void APlayerCharacter::StopJumping()
 void APlayerCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D MouseMovement = Value.Get<FVector2D>();
+	
 	AddControllerYawInput(MouseMovement.X);
 	AddControllerPitchInput(-MouseMovement.Y);
+
+	MouseYaw = MouseMovement.X;
+	MousePitch = MouseMovement.Y;
 
 }
 

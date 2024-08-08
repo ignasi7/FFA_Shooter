@@ -120,4 +120,12 @@ private:
 	// Is Aiming Boleean
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool IsAiming;
+
+	// Mouse Values for animation adjustments
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	float MousePitch;
+	
+	// Mouse Values for animation adjustments
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	float MouseYaw;
 };
