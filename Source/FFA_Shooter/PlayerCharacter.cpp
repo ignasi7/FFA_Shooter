@@ -10,6 +10,8 @@
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "Engine/Engine.h"
+#include "Kismet/KismetMathLibrary.h"  
+#include "Kismet/BlueprintFunctionLibrary.h" 
 
 
 
@@ -62,17 +64,11 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Ensure the Animation Blueprint is associated
-	/*if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	// Ensure the Animation Blueprint is associated and connect it
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{
-		// Check if the Animation Blueprint is of the correct type
-		if(BP_Character_Anim* AnimBP = Cast<UYourAnimationBlueprint>(AnimInstance))
-		{
-			// Update Animation Blueprint variables with the current mouse values
-			YourAnimBP->SetMousePitch(MousePitch);
-			YourAnimBP->SetMouseYaw(MouseYaw);
-		}
-	}*/
+		PlayerAnimInstance = Cast<UPlayerCharacterAnimInstance>(AnimInstance);
+	}
 
 
 	// Check if we have a valid player controller and subsystem
@@ -99,7 +95,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		/*FString FOVString = FString::Printf(TEXT("FieldOfView: %f"), Camera->FieldOfView);
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FOVString);
-		*/ 
+		*/
 		UpdateFOV(DeltaTime);
 	}
 }
@@ -166,8 +162,23 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	AddControllerYawInput(MouseMovement.X);
 	AddControllerPitchInput(-MouseMovement.Y);
 
-	MouseYaw = MouseMovement.X;
-	MousePitch = MouseMovement.Y;
+	FVector SpineLocation = GetMesh()->GetBoneLocation("Spine", EBoneSpaces::WorldSpace);
+	FVector AdjustedCameraPosition = Camera->GetComponentLocation() - SpringArm->GetComponentTransform().GetTranslation();
+
+	FVector VectorToCamera = AdjustedCameraPosition - SpineLocation;
+	FVector UpVector = FVector(0, 0, 1);
+	FVector PerpendicularVector = FVector::CrossProduct(VectorToCamera, UpVector);
+	PerpendicularVector.Normalize();
+
+	FRotator SpineRotation = UKismetMathLibrary::FindLookAtRotation(VectorToCamera, PerpendicularVector);
+	
+	if (PlayerAnimInstance)
+	{
+		PlayerAnimInstance->SetSpineRotation(SpineRotation);
+	}
+
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, SpineLocationString);
 
 }
 

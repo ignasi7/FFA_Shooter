@@ -1,5 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "PlayerCharacterAnimInstance.h"
+#include "Engine/Engine.h"
+
+void UPlayerCharacterAnimInstance::SetSpineRotation(const FRotator& NewSpineRotation)
+{
+    SpineRotation = NewSpineRotation;
+
+}
+
 

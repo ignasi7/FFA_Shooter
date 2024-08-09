@@ -8,7 +8,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
+#include "PlayerCharacterAnimInstance.h"
 #include "PlayerCharacter.generated.h"
+
 
 UCLASS()
 class FFA_SHOOTER_API APlayerCharacter : public ACharacter
@@ -128,4 +130,8 @@ private:
 	// Mouse Values for animation adjustments
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	float MouseYaw;
+
+	UPlayerCharacterAnimInstance* PlayerAnimInstance;
+
+
 };
