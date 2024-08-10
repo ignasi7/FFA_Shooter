@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -9,7 +7,10 @@
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "PlayerCharacterAnimInstance.h"
+#include "WeaponBase.h"
 #include "PlayerCharacter.generated.h"
+
+
 
 
 UCLASS()
@@ -21,10 +22,29 @@ public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
+	TArray<TSubclassOf<AWeaponBase>> WeaponClasses; // Weapons available to spawn
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapons")
+	TArray<AWeaponBase*> WeaponInventory; // Spawned Weapons
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapons")
+	int32 CurrentWeaponIndex;
+
+	UFUNCTION(BlueprintCallable, Category = "Weapons")
+	void EquipWeapon(int32 WeaponIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "Weapons")
+	void SpawnWeapons();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapons")
+	void SwitchWeapon();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	// -------------------------------------------------------------- Camera
 	// Spring Arm Component
 	UPROPERTY(EditAnywhere)
 	class USpringArmComponent* SpringArm;
@@ -32,6 +52,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	class UCameraComponent* Camera;
 
+	// -------------------------------------------------------------- Input Actions
 	// Input action properties
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	class UInputAction* MoveAction;
@@ -48,9 +69,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	class UInputAction* AimAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	class UInputAction* FireAction;
+
 	// Input mapping context
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	class UInputMappingContext* InputMappingContext;
+
 
 public:	
 	// Called every frame
@@ -59,7 +84,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// Input functions
+	// Input basic movement functions
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void Jump();
@@ -77,8 +102,15 @@ public:
 	void StartAiming();
 	void StopAiming();
 
+	// Methods to manage shooting
+	void StartShooting();
+	void StopShooting();
+
 
 private:
+
+	// -------------------------------------------------------------- Movement
+
 	// The base walking speed of the character
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	float BaseRunSpeed;
@@ -91,6 +123,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsSprinting;
 
+	// -------------------------------------------------------------- FOV
 	// Normal FOV
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	float NormalFOV;
@@ -123,15 +156,27 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool IsAiming;
 
-	// Mouse Values for animation adjustments
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	float MousePitch;
-	
-	// Mouse Values for animation adjustments
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	float MouseYaw;
 
-	UPlayerCharacterAnimInstance* PlayerAnimInstance;
+	// -------------------------------------------------------------- Shooting
+	// 
+	// Variable to keep track of the current weapon
+	UPROPERTY()
+	AWeaponBase* CurrentWeapon;
+
+	// Is firing or not an automatic gun
+	bool bIsFiringAutomatic; 
+	
+	// Is the weapon automatic or not
+	bool bIsAutomatic; 
+	
+	// Fire rate of the weapon
+	float FireRate; 
+	
+	// Time of the last shot
+	float LastFireTime; 
+
+	// Handle firing logic
+	void HandleFiring(float DeltaTime);
 
 
 };

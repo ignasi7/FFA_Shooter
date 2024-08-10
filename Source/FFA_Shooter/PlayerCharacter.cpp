@@ -20,6 +20,8 @@ APlayerCharacter::APlayerCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	CurrentWeaponIndex = 0;
+
 	// Create the SpringArm and attach it to the RootComponent
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
@@ -57,6 +59,12 @@ APlayerCharacter::APlayerCharacter()
 	IsAiming = false;
 	AimingFOV = 50.0f;
 
+	// Initialize Shooting variables
+	CurrentWeapon = nullptr;
+	bIsFiringAutomatic = false;
+	bIsAutomatic = false; 
+	FireRate = 0.1f;
+	LastFireTime = 0.0f;
 }
 
 // Called when the game starts or when spawned
@@ -65,10 +73,10 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	// Ensure the Animation Blueprint is associated and connect it
-	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	/*if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{
 		PlayerAnimInstance = Cast<UPlayerCharacterAnimInstance>(AnimInstance);
-	}
+	}*/
 
 
 	// Check if we have a valid player controller and subsystem
@@ -82,6 +90,10 @@ void APlayerCharacter::BeginPlay()
 			}
 		}
 	}
+
+	// Spawn all linked Weapons
+	SpawnWeapons();
+	EquipWeapon(0);
 	
 }
 
@@ -93,10 +105,13 @@ void APlayerCharacter::Tick(float DeltaTime)
 	// Update the FOV if needed
 	if (CurrentTransitionDurationFOV > 0.0f)
 	{
-		/*FString FOVString = FString::Printf(TEXT("FieldOfView: %f"), Camera->FieldOfView);
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FOVString);
-		*/
 		UpdateFOV(DeltaTime);
+	}
+
+	// Handle automatic firing
+	if (bIsFiringAutomatic && bIsAutomatic)
+	{
+		HandleFiring(DeltaTime);
 	}
 }
 
@@ -132,6 +147,11 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &APlayerCharacter::StartAiming);
 			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopAiming);
 		}
+		if (FireAction)
+		{
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &APlayerCharacter::StartShooting);
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopShooting);
+		}
 
 	}
 }
@@ -162,6 +182,7 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	AddControllerYawInput(MouseMovement.X);
 	AddControllerPitchInput(-MouseMovement.Y);
 
+	/*
 	FVector SpineLocation = GetMesh()->GetBoneLocation("Spine", EBoneSpaces::WorldSpace);
 	FVector AdjustedCameraPosition = Camera->GetComponentLocation() - SpringArm->GetComponentTransform().GetTranslation();
 
@@ -175,10 +196,7 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	if (PlayerAnimInstance)
 	{
 		PlayerAnimInstance->SetSpineRotation(SpineRotation);
-	}
-
-
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, SpineLocationString);
+	}*/
 
 }
 
@@ -265,6 +283,80 @@ void APlayerCharacter::StopAiming()
 	{
 		StartFOVTransition(NormalFOV, TransitionDurationFOV);
 
+	}
+}
+
+
+void APlayerCharacter::SpawnWeapons()
+{
+    for (const TSubclassOf<AWeaponBase>& WeaponClass : WeaponClasses)
+	{
+		if (WeaponClass)
+		{
+			AWeaponBase* NewWeapon = GetWorld()->SpawnActor<AWeaponBase>(WeaponClass);
+
+			if (NewWeapon)
+			{
+				NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("WeaponSocket"));
+				NewWeapon->SetOwner(this);
+				NewWeapon->SetActorHiddenInGame(true); 
+				WeaponInventory.Add(NewWeapon);
+			}
+		}
+	}
+}
+
+void APlayerCharacter::EquipWeapon(int32 WeaponIndex)
+{
+	if (WeaponInventory.IsValidIndex(WeaponIndex))
+	{
+		if (WeaponInventory.IsValidIndex(CurrentWeaponIndex))
+		{
+			// Hide current Gun
+			WeaponInventory[CurrentWeaponIndex]->SetActorHiddenInGame(true);
+
+			// Show new gun
+			CurrentWeaponIndex = WeaponIndex;
+			WeaponInventory[CurrentWeaponIndex]->SetActorHiddenInGame(false);
+			
+			CurrentWeapon = WeaponInventory[CurrentWeaponIndex];
+			bIsAutomatic = CurrentWeapon->bIsAutomatic;
+			FireRate = CurrentWeapon->FireRate;
+
+		}	
+	}
+}
+
+void APlayerCharacter::SwitchWeapon()
+{
+	
+}
+
+void APlayerCharacter::StartShooting()
+{
+	if (bIsAutomatic)
+	{
+		bIsFiringAutomatic = true;
+	}
+	else {
+		CurrentWeapon->Fire();
+	}
+}
+
+void APlayerCharacter::StopShooting()
+{
+	if (bIsAutomatic)
+	{
+		bIsFiringAutomatic = false;
+	}
+}
+
+void APlayerCharacter::HandleFiring(float DeltaTime)
+{
+	if (CurrentWeapon && (GetWorld()->GetTimeSeconds() - LastFireTime >= FireRate))
+	{
+		CurrentWeapon->Fire();
+		LastFireTime = GetWorld()->GetTimeSeconds(); // Update the time of the last shot
 	}
 }
 
