@@ -58,11 +58,14 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
     USoundBase* FireSound;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
-    UParticleSystem* MuzzleFlash;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UStaticMeshComponent* MeshComponent;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
-    UParticleSystem* ImpactEffect;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UParticleSystemComponent* MuzzleFlashComponent;
+
+   // UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
+   // UParticleSystem* ImpactEffect;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
     FName MuzzleSocketName;

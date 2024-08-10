@@ -1,4 +1,5 @@
 #include "WeaponBase.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Constructor
@@ -6,6 +7,15 @@ AWeaponBase::AWeaponBase()
 {
     PrimaryActorTick.bCanEverTick = true;
     CurrentAmmo = MagazineSize; // Initialize ammo to a full magazine
+
+    MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
+    RootComponent = MeshComponent;
+
+    MuzzleFlashComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MuzzleFlash"));
+    MuzzleFlashComponent->SetupAttachment(MeshComponent, TEXT("Muzzle"));
+    MuzzleFlashComponent->bAutoActivate = false;
+    MuzzleFlashComponent->SetWorldScale3D(FVector(0.1f, 0.1f, 0.1f));  
+
 }
 
 // Called when the game starts or when spawned
@@ -23,8 +33,7 @@ void AWeaponBase::Tick(float DeltaTime)
 void AWeaponBase::Fire()
 {
     UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("Hola"));
-
+    MuzzleFlashComponent->ActivateSystem(true);
 
     /*
     if (CurrentAmmo > 0)
