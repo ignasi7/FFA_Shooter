@@ -238,7 +238,10 @@ void APlayerCharacter::StopSprinting()
 {
 	bIsSprinting = false; // Set the sprinting state to false
 	GetCharacterMovement()->MaxWalkSpeed = BaseRunSpeed; // Set character speed back to base walk speed
-	StartFOVTransition(NormalFOV, TransitionDurationFOV);
+	if (!IsAiming)
+	{
+		StartFOVTransition(NormalFOV, TransitionDurationFOV);
+	}
 }
 
 void APlayerCharacter::StartAiming()
