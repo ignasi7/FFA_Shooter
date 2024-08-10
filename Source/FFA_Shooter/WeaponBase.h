@@ -70,6 +70,10 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
     FName MuzzleSocketName;
 
+    UPROPERTY()
+    APlayerController* PlayerCharacterController;
+
+
     // Methods
     UFUNCTION(BlueprintCallable, Category = "Weapon")
     virtual void Fire();
