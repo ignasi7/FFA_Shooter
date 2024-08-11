@@ -64,11 +64,8 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UParticleSystemComponent* MuzzleFlashComponent;
 
-   // UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
-   // UParticleSystem* ImpactEffect;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
-    FName MuzzleSocketName;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UParticleSystemComponent* ImpactFlashComponent;
 
     UPROPERTY()
     APlayerController* PlayerCharacterController;

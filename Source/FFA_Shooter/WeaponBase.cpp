@@ -14,8 +14,11 @@ AWeaponBase::AWeaponBase()
     RootComponent = MeshComponent;
 
     MuzzleFlashComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MuzzleFlash"));
-    MuzzleFlashComponent->SetupAttachment(MeshComponent, MuzzleSocketName);
+    MuzzleFlashComponent->SetupAttachment(MeshComponent, TEXT("Muzzle"));
     MuzzleFlashComponent->bAutoActivate = false;
+
+    ImpactFlashComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ImpactFlash"));
+    ImpactFlashComponent->bAutoActivate = false;
 }
 
 // Called when the game starts or when spawned
@@ -33,7 +36,26 @@ void AWeaponBase::BeginPlay()
 void AWeaponBase::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+}
 
+void AWeaponBase::Fire()
+{
+    UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+    MuzzleFlashComponent->ActivateSystem(true);
+
+    /*
+    if (CurrentAmmo > 0)
+    {
+        --CurrentAmmo;
+        UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, GetRootComponent(), MuzzleSocketName);
+        UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+
+        // Implement shooting logic (raycast, damage application, etc.)
+    }
+    else
+    {
+        // Play empty click sound or reload prompt
+    }*/
 
     // Step 1: Get the start location from the muzzle socket
     FVector MuzzleLocation = MeshComponent->GetSocketLocation("Muzzle");
@@ -57,32 +79,14 @@ void AWeaponBase::Tick(float DeltaTime)
     {
         // If we hit something, update the end location to the impact point
         EndLocation = HitResult.ImpactPoint;
+        ImpactFlashComponent->SetWorldLocation(EndLocation);
+        ImpactFlashComponent->ActivateSystem(true);
 
         // You can do additional logic here if you need to handle what happens on hit
     }
 
     // Step 5: Draw the debug line to visualize the trace
     DrawDebugLine(GetWorld(), MuzzleLocation, EndLocation, FColor::Red, false, 0.1f, 0, 1.0f); // Last two parameters control thickness
-}
-
-void AWeaponBase::Fire()
-{
-    UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-    MuzzleFlashComponent->ActivateSystem(true);
-
-    /*
-    if (CurrentAmmo > 0)
-    {
-        --CurrentAmmo;
-        UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, GetRootComponent(), MuzzleSocketName);
-        UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-
-        // Implement shooting logic (raycast, damage application, etc.)
-    }
-    else
-    {
-        // Play empty click sound or reload prompt
-    }*/
 }
 
 void AWeaponBase::Reload()
