@@ -48,20 +48,14 @@ void AWeaponBase::BeginPlay()
     }
 }
 
-// Called every frame
-void AWeaponBase::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-}
-
 void AWeaponBase::Fire()
 {
     if (IsReloading) {
         return;
     }
-    if (CurrentAmmo > 0) 
+    if (CurrentAmmo > 0)
     {
-        if(WeaponType == EWeaponType::Pistol || WeaponType == EWeaponType::SMG || (WeaponType == EWeaponType::Shotgun && CanFireShotgun))
+        if (WeaponType == EWeaponType::Pistol || WeaponType == EWeaponType::SMG || (WeaponType == EWeaponType::Shotgun && CanFireShotgun))
         {
             --CurrentAmmo;
 
@@ -83,26 +77,75 @@ void AWeaponBase::Fire()
             FVector CameraLocation;
             FRotator CameraRotation;
             PlayerCharacterController->GetPlayerViewPoint(CameraLocation, CameraRotation);
-            FVector TraceDirection = CameraRotation.Vector();
 
-            // Define the endpoint of the trace
-            FVector EndLocation = CameraLocation + (TraceDirection * 10000.f); 
-
-            // Perform the line trace
-            FHitResult HitResult;
-            FCollisionQueryParams CollisionParams;
-            CollisionParams.AddIgnoredActor(this);
-            CollisionParams.AddIgnoredActor(GetOwner());
-
-            if (GetWorld()->LineTraceSingleByChannel(HitResult, CameraLocation, EndLocation, ECC_Visibility, CollisionParams))
+            // Logic for different weapon types
+            if (WeaponType == EWeaponType::Shotgun)
             {
-                // If we hit something, update the end location to the impact point
-                EndLocation = HitResult.ImpactPoint;
-                ImpactFlashComponent->SetWorldLocation(EndLocation);
-                ImpactFlashComponent->ActivateSystem(true);
-            }
+                const int NumPellets = 5; // Number of pellets
+                const float SpreadAngle = 2.0f; // Spread angle in degrees
 
-           // DrawDebugLine(GetWorld(), CameraLocation, EndLocation, FColor::Red, false, 0.1f, 0, 1.0f); // Last two parameters control thickness
+                for (int i = 0; i < NumPellets; ++i)
+                {
+                    // Create a spread by slightly modifying the direction
+                    FRotator PelletRotation = CameraRotation;
+                    PelletRotation.Yaw += FMath::FRandRange(-SpreadAngle, SpreadAngle);
+                    PelletRotation.Pitch += FMath::FRandRange(-SpreadAngle, SpreadAngle);
+
+                    FVector PelletDirection = PelletRotation.Vector();
+                    FVector EndLocation = CameraLocation + (PelletDirection * 10000.f);
+
+                    FHitResult HitResult;
+                    FCollisionQueryParams CollisionParams;
+                    CollisionParams.AddIgnoredActor(this);
+                    CollisionParams.AddIgnoredActor(GetOwner());
+
+                    if (GetWorld()->LineTraceSingleByChannel(HitResult, CameraLocation, EndLocation, ECC_Visibility, CollisionParams))
+                    {
+                        EndLocation = HitResult.ImpactPoint;
+
+                        // Create a new particle system at each hit location
+                        if (ImpactFlashComponent)
+                        {
+                            UParticleSystemComponent* ImpactFlash = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactFlashComponent->Template, EndLocation);
+                            if (ImpactFlash)
+                            {
+                                ImpactFlash->ActivateSystem(true);
+                            }
+                        }
+                    }
+
+                    // Visualize the shot
+                    // DrawDebugLine(GetWorld(), CameraLocation, EndLocation, FColor::Red, false, 0.1f, 0, 1.0f);
+                }
+
+            }
+            else
+            {
+                // Logic for non-shotgun weapons
+                FVector TraceDirection = CameraRotation.Vector();
+                FVector EndLocation = CameraLocation + (TraceDirection * 10000.f);
+
+                FHitResult HitResult;
+                FCollisionQueryParams CollisionParams;
+                CollisionParams.AddIgnoredActor(this);
+                CollisionParams.AddIgnoredActor(GetOwner());
+
+                if (GetWorld()->LineTraceSingleByChannel(HitResult, CameraLocation, EndLocation, ECC_Visibility, CollisionParams))
+                {
+                    EndLocation = HitResult.ImpactPoint;
+                    ImpactFlashComponent->SetWorldLocation(EndLocation);
+                    ImpactFlashComponent->ActivateSystem(true);
+
+                    // Apply damage to the hit actor
+                    if (AActor* HitActor = HitResult.GetActor())
+                    {
+                        UGameplayStatics::ApplyDamage(HitActor, DamagePerShot, PlayerCharacterController, this, nullptr);
+                    }
+                }
+
+                // Visualize the shot
+                // DrawDebugLine(GetWorld(), CameraLocation, EndLocation, FColor::Red, false, 0.1f, 0, 1.0f);
+            }
         }
     }
     else
@@ -165,6 +208,7 @@ void AWeaponBase::FinishReloading()
     {
         CurrentAmmo += AmmoToAdd;
         RemainingMagazines -= 1; 
+        CanFireShotgun = true;
     }
 
     if (PlayerHUD)
