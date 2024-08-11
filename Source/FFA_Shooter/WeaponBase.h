@@ -18,15 +18,19 @@ class FFA_SHOOTER_API AWeaponBase : public AActor
 {
     GENERATED_BODY()
 
-public:
-    // Constructor
-    AWeaponBase();
-
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
+    // HUD reference
+    UPROPERTY()
+    UPlayerHUD* PlayerHUD;
+
 public:
+
+    // Constructor
+    AWeaponBase();
+
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
@@ -58,6 +62,9 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
     USoundBase* FireSound;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
+    USoundBase* EmptyGunSound;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UStaticMeshComponent* MeshComponent;
 
@@ -77,5 +84,8 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Weapon")
     virtual void Reload();
+
+    UFUNCTION(BlueprintCallable, Category = "UI")
+    void SetPlayerHUD(UPlayerHUD* NewHUD);
 };
 

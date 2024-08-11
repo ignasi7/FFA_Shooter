@@ -8,6 +8,7 @@
 #include "InputMappingContext.h"
 #include "PlayerCharacterAnimInstance.h"
 #include "WeaponBase.h"
+#include "PlayerHUD.h"
 #include "PlayerCharacter.generated.h"
 
 
@@ -76,6 +77,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	class UInputMappingContext* InputMappingContext;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> HUDClass;
+
+	UPROPERTY()
+	UPlayerHUD* PlayerHUD;
+	
 
 public:	
 	// Called every frame

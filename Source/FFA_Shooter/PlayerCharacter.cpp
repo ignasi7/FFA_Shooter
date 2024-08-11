@@ -11,6 +11,7 @@
 #include "InputMappingContext.h"
 #include "Engine/Engine.h"
 #include "Kismet/KismetMathLibrary.h"  
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/BlueprintFunctionLibrary.h" 
 
 
@@ -72,16 +73,24 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Ensure the Animation Blueprint is associated and connect it
-	/*if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
-	{
-		PlayerAnimInstance = Cast<UPlayerCharacterAnimInstance>(AnimInstance);
-	}*/
+	// Obtener el PlayerController actual de manera segura
+	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 
-
-	// Check if we have a valid player controller and subsystem
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	// Asegúrate de que el PlayerController es válido
+	if (PlayerController)
 	{
+		// Comienza la sección de creación del HUD
+		if (HUDClass)
+		{
+			// Crear y mostrar el widget HUD
+			PlayerHUD = CreateWidget<UPlayerHUD>(PlayerController, HUDClass);
+			if (PlayerHUD)
+			{
+				PlayerHUD->AddToViewport();
+			}
+		}
+
+		// Comienza la sección de configuración de InputSubsystem
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			if (InputMappingContext)
@@ -300,6 +309,7 @@ void APlayerCharacter::SpawnWeapons()
 				NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("WeaponSocket"));
 				NewWeapon->SetOwner(this);
 				NewWeapon->SetActorHiddenInGame(true); 
+				NewWeapon->SetPlayerHUD(PlayerHUD);
 				WeaponInventory.Add(NewWeapon);
 			}
 		}
