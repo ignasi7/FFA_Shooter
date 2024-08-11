@@ -38,8 +38,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapons")
 	void SpawnWeapons();
 
-	UFUNCTION(BlueprintCallable, Category = "Weapons")
-	void SwitchWeapon();
 
 protected:
 	// Called when the game starts or when spawned
@@ -72,6 +70,18 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	class UInputAction* FireAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	class UInputAction* ReloadAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	class UInputAction* Weapon1Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	class UInputAction* Weapon2Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	class UInputAction* Weapon3Action;
 
 	// Input mapping context
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -112,6 +122,12 @@ public:
 	// Methods to manage shooting
 	void StartShooting();
 	void StopShooting();
+
+	void Reload();
+
+	void EquipWeapon0();
+	void EquipWeapon1();
+	void EquipWeapon2();
 
 
 private:

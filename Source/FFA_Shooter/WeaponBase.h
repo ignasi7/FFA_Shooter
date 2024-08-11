@@ -44,11 +44,17 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
     int32 MaxMagazines;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+    int32 RemainingMagazines;
+
     UPROPERTY(BlueprintReadWrite, Category = "Weapon")
     int32 CurrentAmmo;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
     float FireRate;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+    bool IsReloading;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
     float ReloadTime;
@@ -64,6 +70,18 @@ public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
     USoundBase* EmptyGunSound;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
+    USoundBase* ReloadSound;
+
+    // Handle for the reload timer
+    FTimerHandle ReloadTimerHandle;
+
+    UPROPERTY()
+    bool CanFireShotgun;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
+    USoundBase* ErrorSound;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UStaticMeshComponent* MeshComponent;
@@ -87,5 +105,17 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "UI")
     void SetPlayerHUD(UPlayerHUD* NewHUD);
+
+    UFUNCTION(BlueprintCallable, Category = "UI")
+    void UpdateHUD();
+
+    UFUNCTION(BlueprintCallable, Category = "UI")
+    void FinishReloading();
+
+    UFUNCTION(BlueprintCallable, Category = "Weapon")
+    FName GetWeaponName() const;
+
+    UFUNCTION(BlueprintCallable, Category = "UI")
+    void ResetFireAbility();
 };
 

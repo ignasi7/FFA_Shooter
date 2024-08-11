@@ -16,6 +16,7 @@ class FFA_SHOOTER_API UPlayerHUD : public UUserWidget
 	GENERATED_BODY()
 
 public:
+    void UpdateGun(FName GunName);
     void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);
     void UpdateMagazines(int32 RemainingMags);
     void UpdateHealth(int32 CurrentHealth, int32 MaxHealth);
@@ -26,6 +27,9 @@ protected:
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* AmmoText;
+
+    UPROPERTY(meta = (BindWidget))
+    UTextBlock* GunText;
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* MagsText;

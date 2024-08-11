@@ -2,6 +2,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "PlayerHUD.h"
+#include "TimerManager.h"
 #include "DrawDebugHelpers.h"
 
 
@@ -21,6 +22,10 @@ AWeaponBase::AWeaponBase()
     ImpactFlashComponent->bAutoActivate = false;
 
     PlayerHUD = nullptr;
+
+    IsReloading = false;
+    CanFireShotgun = true;
+
 }
 
 // Called when the game starts or when spawned
@@ -29,6 +34,7 @@ void AWeaponBase::BeginPlay()
     Super::BeginPlay();
 
     CurrentAmmo = MagazineSize;
+    RemainingMagazines = MaxMagazines;
 
     if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
     {
@@ -38,7 +44,7 @@ void AWeaponBase::BeginPlay()
     if (PlayerHUD)
     {
         PlayerHUD->UpdateAmmo(CurrentAmmo, MagazineSize);
-
+        PlayerHUD->UpdateMagazines(RemainingMagazines);
     }
 }
 
@@ -50,63 +56,54 @@ void AWeaponBase::Tick(float DeltaTime)
 
 void AWeaponBase::Fire()
 {
-    UE_LOG(LogTemp, Warning, TEXT("FIRE OUT")); 
-
-    // Log the weapon stats
-    UE_LOG(LogTemp, Warning, TEXT("Weapon Stats:"));
-    UE_LOG(LogTemp, Warning, TEXT("Damage Per Shot: %f"), DamagePerShot);
-    UE_LOG(LogTemp, Warning, TEXT("Magazine Size: %d"), MagazineSize);
-    UE_LOG(LogTemp, Warning, TEXT("Max Magazines: %d"), MaxMagazines);
-    UE_LOG(LogTemp, Warning, TEXT("Current Ammo: %d"), CurrentAmmo);
-    UE_LOG(LogTemp, Warning, TEXT("Fire Rate: %f"), FireRate);
-    UE_LOG(LogTemp, Warning, TEXT("Reload Time: %f"), ReloadTime);
-    UE_LOG(LogTemp, Warning, TEXT("Weapon Type: %d"), static_cast<int32>(WeaponType)); // Assuming EWeaponType is an enum
-
-
-    if (CurrentAmmo > 0)
+    if (IsReloading) {
+        return;
+    }
+    if (CurrentAmmo > 0) 
     {
-        UE_LOG(LogTemp, Warning, TEXT("FIRE IN"));
-
-        --CurrentAmmo;
-
-        if (PlayerHUD)
+        if(WeaponType == EWeaponType::Pistol || WeaponType == EWeaponType::SMG || (WeaponType == EWeaponType::Shotgun && CanFireShotgun))
         {
-            PlayerHUD->UpdateAmmo(CurrentAmmo, MagazineSize);
+            --CurrentAmmo;
+
+            if (PlayerHUD)
+            {
+                UpdateHUD();
+            }
+            UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+            MuzzleFlashComponent->ActivateSystem(true);
+
+            if (WeaponType == EWeaponType::Shotgun)
+            {
+                CanFireShotgun = false;
+                float FireSoundDuration = FireSound ? FireSound->GetDuration() : 1.0f;
+                GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, this, &AWeaponBase::ResetFireAbility, FireSoundDuration, false);
+            }
+
+            // Implement shooting logic
+            FVector CameraLocation;
+            FRotator CameraRotation;
+            PlayerCharacterController->GetPlayerViewPoint(CameraLocation, CameraRotation);
+            FVector TraceDirection = CameraRotation.Vector();
+
+            // Define the endpoint of the trace
+            FVector EndLocation = CameraLocation + (TraceDirection * 10000.f); 
+
+            // Perform the line trace
+            FHitResult HitResult;
+            FCollisionQueryParams CollisionParams;
+            CollisionParams.AddIgnoredActor(this);
+            CollisionParams.AddIgnoredActor(GetOwner());
+
+            if (GetWorld()->LineTraceSingleByChannel(HitResult, CameraLocation, EndLocation, ECC_Visibility, CollisionParams))
+            {
+                // If we hit something, update the end location to the impact point
+                EndLocation = HitResult.ImpactPoint;
+                ImpactFlashComponent->SetWorldLocation(EndLocation);
+                ImpactFlashComponent->ActivateSystem(true);
+            }
+
+           // DrawDebugLine(GetWorld(), CameraLocation, EndLocation, FColor::Red, false, 0.1f, 0, 1.0f); // Last two parameters control thickness
         }
-        UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-        MuzzleFlashComponent->ActivateSystem(true);
-
-        // Implement shooting logic (raycast, damage application, etc.)
-        // Step 1: Get the start location from the muzzle socket
-        FVector MuzzleLocation = MeshComponent->GetSocketLocation("Muzzle");
-
-        // Step 2: Get the forward vector for the direction of the trace
-        FVector CameraLocation;
-        FRotator CameraRotation;
-        PlayerCharacterController->GetPlayerViewPoint(CameraLocation, CameraRotation);
-        FVector TraceDirection = CameraRotation.Vector();
-
-        // Step 3: Define the endpoint of the trace
-        FVector EndLocation = MuzzleLocation + (TraceDirection * 10000.f); // 10000 units in the direction of the trace
-
-        // Step 4: Perform the line trace
-        FHitResult HitResult;
-        FCollisionQueryParams CollisionParams;
-        CollisionParams.AddIgnoredActor(this);
-        CollisionParams.AddIgnoredActor(GetOwner());
-
-        if (GetWorld()->LineTraceSingleByChannel(HitResult, MuzzleLocation, EndLocation, ECC_Visibility, CollisionParams))
-        {
-            // If we hit something, update the end location to the impact point
-            EndLocation = HitResult.ImpactPoint;
-            ImpactFlashComponent->SetWorldLocation(EndLocation);
-            ImpactFlashComponent->ActivateSystem(true);
-
-            // You can do additional logic here if you need to handle what happens on hit
-        }
-
-        // Step 5: Draw the debug line to visualize the trace
-        DrawDebugLine(GetWorld(), MuzzleLocation, EndLocation, FColor::Red, false, 0.1f, 0, 1.0f); // Last two parameters control thickness
     }
     else
     {
@@ -114,28 +111,97 @@ void AWeaponBase::Fire()
     }
 }
 
+void AWeaponBase::ResetFireAbility()
+{
+    CanFireShotgun = true;
+}
+
 void AWeaponBase::Reload()
 {
-    if (CurrentAmmo < MagazineSize)
+    if (IsReloading)
     {
-        // Reload logic
+        return;
+    }
+
+    if (CurrentAmmo < MagazineSize && RemainingMagazines > 0)
+    {
+        IsReloading = true; // Set the reloading flag
+
         const int32 AmmoToReload = MagazineSize - CurrentAmmo;
-        const int32 AmmoAvailable = MaxMagazines * MagazineSize - CurrentAmmo; // Simplified calculation
+        const int32 AmmoAvailable = RemainingMagazines * MagazineSize;
 
         const int32 AmmoToAdd = FMath::Min(AmmoToReload, AmmoAvailable);
 
         if (AmmoToAdd > 0)
         {
-            CurrentAmmo += AmmoToAdd;
+            // Play reload sound
+            if (ReloadSound)
+            {
+                UGameplayStatics::PlaySoundAtLocation(this, ReloadSound, GetActorLocation());
+            }
 
-            // Play reload sound, start reload animation, etc.
-            // Consider using a timer to simulate reload time if necessary
+            // Schedule a timer to simulate reload time
+            float ReloadDuration = ReloadSound ? ReloadSound->GetDuration() : 1.0f; // Default to 1 second if no sound
+            GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, this, &AWeaponBase::FinishReloading, ReloadDuration, false);
         }
     }
+    else
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, ErrorSound, GetActorLocation());
+    }
 }
+
+void AWeaponBase::FinishReloading()
+{
+    // Reset reloading flag
+    IsReloading = false;
+
+    const int32 AmmoToReload = MagazineSize - CurrentAmmo;
+    const int32 AmmoAvailable = RemainingMagazines * MagazineSize;
+
+    const int32 AmmoToAdd = FMath::Min(AmmoToReload, AmmoAvailable);
+
+    if (AmmoToAdd > 0)
+    {
+        CurrentAmmo += AmmoToAdd;
+        RemainingMagazines -= 1; 
+    }
+
+    if (PlayerHUD)
+    {
+        UpdateHUD();
+    }
+}
+
 
 
 void AWeaponBase::SetPlayerHUD(UPlayerHUD* NewHUD)
 {
     PlayerHUD = NewHUD;
+}
+
+void AWeaponBase::UpdateHUD()
+{
+    if (PlayerHUD)
+    {
+        FName WeaponName = GetWeaponName();
+        PlayerHUD->UpdateGun(WeaponName);        
+        PlayerHUD->UpdateAmmo(CurrentAmmo, MagazineSize);
+        PlayerHUD->UpdateMagazines(RemainingMagazines);
+    }
+}
+
+FName AWeaponBase::GetWeaponName() const
+{
+    switch (WeaponType)
+    {
+    case EWeaponType::Pistol:
+        return FName("Pistol");
+    case EWeaponType::SMG:
+        return FName("SMG");
+    case EWeaponType::Shotgun:
+        return FName("Shotgun");
+    default:
+        return FName("Unknown");
+    }
 }

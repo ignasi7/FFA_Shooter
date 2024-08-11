@@ -161,6 +161,22 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &APlayerCharacter::StartShooting);
 			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopShooting);
 		}
+		if (ReloadAction)
+		{
+			EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &APlayerCharacter::Reload);
+		}
+		if (Weapon1Action)
+		{
+			EnhancedInputComponent->BindAction(Weapon1Action, ETriggerEvent::Started, this, &APlayerCharacter::EquipWeapon0);
+		}
+		if (Weapon2Action)
+		{
+			EnhancedInputComponent->BindAction(Weapon2Action, ETriggerEvent::Started, this, &APlayerCharacter::EquipWeapon1);
+		}
+		if (Weapon3Action)
+		{
+			EnhancedInputComponent->BindAction(Weapon3Action, ETriggerEvent::Started, this, &APlayerCharacter::EquipWeapon2);
+		}
 
 	}
 }
@@ -190,22 +206,6 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	
 	AddControllerYawInput(MouseMovement.X);
 	AddControllerPitchInput(-MouseMovement.Y);
-
-	/*
-	FVector SpineLocation = GetMesh()->GetBoneLocation("Spine", EBoneSpaces::WorldSpace);
-	FVector AdjustedCameraPosition = Camera->GetComponentLocation() - SpringArm->GetComponentTransform().GetTranslation();
-
-	FVector VectorToCamera = AdjustedCameraPosition - SpineLocation;
-	FVector UpVector = FVector(0, 0, 1);
-	FVector PerpendicularVector = FVector::CrossProduct(VectorToCamera, UpVector);
-	PerpendicularVector.Normalize();
-
-	FRotator SpineRotation = UKismetMathLibrary::FindLookAtRotation(VectorToCamera, PerpendicularVector);
-	
-	if (PlayerAnimInstance)
-	{
-		PlayerAnimInstance->SetSpineRotation(SpineRotation);
-	}*/
 
 }
 
@@ -318,6 +318,8 @@ void APlayerCharacter::SpawnWeapons()
 
 void APlayerCharacter::EquipWeapon(int32 WeaponIndex)
 {
+	UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called with WeaponIndex: %d"), WeaponIndex);
+
 	if (WeaponInventory.IsValidIndex(WeaponIndex))
 	{
 		if (WeaponInventory.IsValidIndex(CurrentWeaponIndex))
@@ -333,13 +335,25 @@ void APlayerCharacter::EquipWeapon(int32 WeaponIndex)
 			bIsAutomatic = CurrentWeapon->bIsAutomatic;
 			FireRate = CurrentWeapon->FireRate;
 
+			CurrentWeapon->UpdateHUD();
+
 		}	
 	}
 }
 
-void APlayerCharacter::SwitchWeapon()
+void APlayerCharacter::EquipWeapon0()
 {
-	
+	EquipWeapon(0);
+}
+
+void APlayerCharacter::EquipWeapon1()
+{
+	EquipWeapon(1);
+}
+
+void APlayerCharacter::EquipWeapon2()
+{
+	EquipWeapon(2);
 }
 
 void APlayerCharacter::StartShooting()
@@ -370,4 +384,10 @@ void APlayerCharacter::HandleFiring(float DeltaTime)
 	}
 }
 
+
+void APlayerCharacter::Reload()
+{
+	CurrentWeapon->Reload();
+	CurrentWeapon->UpdateHUD();
+}
 

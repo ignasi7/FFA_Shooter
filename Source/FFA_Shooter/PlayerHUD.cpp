@@ -13,6 +13,15 @@ void UPlayerHUD::UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo)
     }
 }
 
+void UPlayerHUD::UpdateGun(FName GunName)
+{
+    if (GunText)
+    {
+        FString GunNameString = GunName.ToString();
+        GunText->SetText(FText::FromString(FString::Printf(TEXT("GUN: %s"), *GunNameString)));
+    }
+}
+
 void UPlayerHUD::UpdateMagazines(int32 RemainingMagazines)
 {
     if (MagsText)
