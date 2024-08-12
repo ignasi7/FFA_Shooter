@@ -115,10 +115,14 @@ void AWeaponBase::Fire()
 
                         if (AActor* HitActor = HitResult.GetActor())
                         {
-                            if (Cast<AAIEnemy>(HitActor))
+                            AAIEnemy* Enemy = Cast<AAIEnemy>(HitActor);
+
+                            if (Enemy)
                             {
                                 // The hit actor is an instance of AIEnemy
                                 UE_LOG(LogTemp, Warning, TEXT("Hit an AIEnemy!"));
+                                Enemy->ReduceHealth(DamagePerShot);
+
                                 if (BloodImpactComponent)
                                 {
                                     UParticleSystemComponent* BloodImpact = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodImpactComponent->Template, EndLocation);
@@ -167,10 +171,14 @@ void AWeaponBase::Fire()
 
                     if (AActor* HitActor = HitResult.GetActor())
                     {
-                        if (Cast<AAIEnemy>(HitActor))
+                        AAIEnemy* Enemy = Cast<AAIEnemy>(HitActor);
+
+                        if (Enemy)
                         {
                             // The hit actor is an instance of AIEnemy
                             UE_LOG(LogTemp, Warning, TEXT("Hit an AIEnemy!"));
+                            Enemy->ReduceHealth(DamagePerShot);
+
                             if (BloodImpactComponent)
                             {
                                 UParticleSystemComponent* BloodImpact = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodImpactComponent->Template, EndLocation);

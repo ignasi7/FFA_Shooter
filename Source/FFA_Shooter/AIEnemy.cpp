@@ -8,6 +8,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "GameFramework/Controller.h"
+#include "GameFramework/CharacterMovementComponent.h" // Para usar GetCharacterMovement
 #include "DrawDebugHelpers.h" 
 
 
@@ -110,5 +112,20 @@ void AAIEnemy::Die()
 {
     FString DeathMessage = FString::Printf(TEXT("Enemy %s has died"), *GetName());
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, DeathMessage);
+
+    // Desactiva el control del Character Movement Component
+    GetCharacterMovement()->DisableMovement();
+    GetCharacterMovement()->StopMovementImmediately();
+
+    // Activa el ragdoll
+    GetMesh()->SetSimulatePhysics(true);
+    GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+
+    // Desactiva el control por el AI Controller (si lo hay)
+    AController* AIController = GetController();
+    if (AIController)
+    {
+        AIController->UnPossess();
+    }
 }
 
