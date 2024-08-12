@@ -26,6 +26,7 @@ protected:
     UPROPERTY()
     UPlayerHUD* PlayerHUD;
 
+
 public:
 
     // Constructor
@@ -120,5 +121,6 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "UI")
     void ResetFireAbility();
+
 };
 

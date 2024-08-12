@@ -45,3 +45,29 @@ void UPlayerHUD::UpdateStamina(int32 CurrentStamina, int32 MaxStamina)
         StaminaText->SetText(FText::FromString(FString::Printf(TEXT("Stamina: %d / %d"), CurrentStamina, MaxStamina)));
     }
 }
+
+void UPlayerHUD::SetBackgroundBlurVisibility(bool visible)
+{
+    if (BackgroundBlurStart)
+    {
+        if (visible)
+        {
+            BackgroundBlurStart->SetVisibility(ESlateVisibility::Visible);
+        }
+        else
+        {
+            BackgroundBlurStart->SetVisibility(ESlateVisibility::Hidden);
+
+        }
+    }
+}
+
+void UPlayerHUD::UpdateCountdown(int32 countdown)
+{
+    if (CountdownText)
+    {
+        CountdownText->SetText(FText::FromString(FString::Printf(TEXT("%d"), countdown)));
+    }
+}
+
+

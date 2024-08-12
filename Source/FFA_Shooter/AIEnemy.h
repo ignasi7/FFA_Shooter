@@ -23,7 +23,7 @@ protected:
 
 	void PlayAnimation(int animation);
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -43,7 +43,7 @@ private:
 	// Move to a random location in the nav mesh
 	void SetNextDestination();
 	FVector CurrentDestination;
-	float MovementRadius; 
+	float MovementRadius;
 
 	// Health related properties
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Health", meta = (AllowPrivateAccess = "true"))

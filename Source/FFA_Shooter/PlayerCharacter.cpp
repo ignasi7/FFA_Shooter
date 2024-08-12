@@ -20,6 +20,7 @@ APlayerCharacter::APlayerCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bIsInputEnabled = false;
 
 	CurrentWeaponIndex = 0;
 
@@ -124,34 +125,37 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Update the FOV if needed
-	if (CurrentTransitionDurationFOV > 0.0f)
+	if (bIsInputEnabled)
 	{
-		UpdateFOV(DeltaTime);
-	}
-
-	// Handle automatic firing
-	if (bIsFiringAutomatic && bIsAutomatic)
-	{
-		HandleFiring(DeltaTime);
-	}
-
-	if (bIsSprinting)
-	{
-		CurrentStamina -= StaminaDrainRate * DeltaTime;
-		CurrentStamina = FMath::Max(CurrentStamina, 0.0f);
-		PlayerHUD->UpdateStamina(CurrentStamina, MaxStamina);
-
-		if (CurrentStamina <= 0.0f)
+		// Update the FOV if needed
+		if (CurrentTransitionDurationFOV > 0.0f)
 		{
-			StopSprinting();
+			UpdateFOV(DeltaTime);
 		}
-	}
-	else
-	{
-		CurrentStamina += StaminaRegenerationRate * DeltaTime;
-		CurrentStamina = FMath::Min(CurrentStamina, MaxStamina); 
-		PlayerHUD->UpdateStamina(CurrentStamina, MaxStamina);
+
+		// Handle automatic firing
+		if (bIsFiringAutomatic && bIsAutomatic)
+		{
+			HandleFiring(DeltaTime);
+		}
+
+		if (bIsSprinting)
+		{
+			CurrentStamina -= StaminaDrainRate * DeltaTime;
+			CurrentStamina = FMath::Max(CurrentStamina, 0.0f);
+			PlayerHUD->UpdateStamina(CurrentStamina, MaxStamina);
+
+			if (CurrentStamina <= 0.0f)
+			{
+				StopSprinting();
+			}
+		}
+		else
+		{
+			CurrentStamina += StaminaRegenerationRate * DeltaTime;
+			CurrentStamina = FMath::Min(CurrentStamina, MaxStamina); 
+			PlayerHUD->UpdateStamina(CurrentStamina, MaxStamina);
+		}
 	}
 }
 
@@ -214,21 +218,30 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
-	// Implement movement logic
-	FVector2D MovementVector = Value.Get<FVector2D>();
-	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
-	AddMovementInput(GetActorRightVector(), MovementVector.X);
+	if (bIsInputEnabled)
+	{
+		// Implement movement logic
+		FVector2D MovementVector = Value.Get<FVector2D>();
+		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+		AddMovementInput(GetActorRightVector(), MovementVector.X);
+	}
 
 }
 
 void APlayerCharacter::Jump()
 {
-	Super::Jump();
+	if (bIsInputEnabled)
+	{
+		Super::Jump();
+	}
 }
 
 void APlayerCharacter::StopJumping()
 {
-	Super::StopJumping();
+	if (bIsInputEnabled)
+	{
+		Super::StopJumping();
+	}
 }
 
 void APlayerCharacter::Look(const FInputActionValue& Value)
@@ -237,7 +250,6 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	
 	AddControllerYawInput(MouseMovement.X);
 	AddControllerPitchInput(-MouseMovement.Y);
-
 }
 
 
@@ -270,23 +282,26 @@ void APlayerCharacter::UpdateFOV(float DeltaTime)
 // Method to start sprinting
 void APlayerCharacter::StartSprinting()
 {
-	if (!IsAiming && CurrentStamina > 0.0f)
+	if (bIsInputEnabled)
 	{
-		// Get the character's current velocity
-		FVector Velocity = GetCharacterMovement()->Velocity;
-
-		// Calculate the magnitude of the velocity vector
-		float Speed = Velocity.Size();
-
-		// Define a minimum speed threshold for sprinting
-		const float MinimumSpeedThreshold = 1.0f; // Adjust this value as needed
-
-		// Only start sprinting if the character is moving faster than the threshold
-		if (Speed > MinimumSpeedThreshold)
+		if (!IsAiming && CurrentStamina > 0.0f)
 		{
-			bIsSprinting = true; // Set the sprinting state to true
-			GetCharacterMovement()->MaxWalkSpeed = SprintSpeed; // Set character speed to sprint speed
-			StartFOVTransition(SprintFOV, TransitionDurationFOV);
+			// Get the character's current velocity
+			FVector Velocity = GetCharacterMovement()->Velocity;
+
+			// Calculate the magnitude of the velocity vector
+			float Speed = Velocity.Size();
+
+			// Define a minimum speed threshold for sprinting
+			const float MinimumSpeedThreshold = 1.0f; // Adjust this value as needed
+
+			// Only start sprinting if the character is moving faster than the threshold
+			if (Speed > MinimumSpeedThreshold)
+			{
+				bIsSprinting = true; // Set the sprinting state to true
+				GetCharacterMovement()->MaxWalkSpeed = SprintSpeed; // Set character speed to sprint speed
+				StartFOVTransition(SprintFOV, TransitionDurationFOV);
+			}
 		}
 	}
 }
@@ -304,12 +319,15 @@ void APlayerCharacter::StopSprinting()
 
 void APlayerCharacter::StartAiming()
 {
-	IsAiming = true;
-	if (bIsSprinting)
+	if (bIsInputEnabled)
 	{
-		StopSprinting();
+		IsAiming = true;
+		if (bIsSprinting)
+		{
+			StopSprinting();
+		}
+		StartFOVTransition(AimingFOV, TransitionDurationFOV);
 	}
-	StartFOVTransition(AimingFOV, TransitionDurationFOV);
 }
 
 void APlayerCharacter::StopAiming()
@@ -390,14 +408,17 @@ void APlayerCharacter::EquipWeapon2()
 
 void APlayerCharacter::StartShooting()
 {
-	if (bIsAutomatic)
+	if (bIsInputEnabled)
 	{
-		bIsFiringAutomatic = true;
-	}
-	else {
-		if (CurrentWeapon)
+		if (bIsAutomatic)
 		{
-			CurrentWeapon->Fire();
+			bIsFiringAutomatic = true;
+		}
+		else {
+			if (CurrentWeapon)
+			{
+				CurrentWeapon->Fire();
+			}
 		}
 	}
 }
@@ -422,7 +443,34 @@ void APlayerCharacter::HandleFiring(float DeltaTime)
 
 void APlayerCharacter::Reload()
 {
-	CurrentWeapon->Reload();
-	CurrentWeapon->UpdateHUD();
+	if (bIsInputEnabled)
+	{
+		CurrentWeapon->Reload();
+		CurrentWeapon->UpdateHUD();
+	}
+
 }
+
+void APlayerCharacter::ChangeInputValidation(bool inputValidation)
+{
+	bIsInputEnabled = inputValidation;
+	SetBlurVisibility(!inputValidation);
+}
+
+void APlayerCharacter::SetBlurVisibility(bool visible)
+{
+	if (PlayerHUD)
+	{
+		PlayerHUD->SetBackgroundBlurVisibility(visible);
+	}
+}
+
+void APlayerCharacter::UpdateCountdownValue(int32 value)
+{
+	if (PlayerHUD)
+	{
+		PlayerHUD->UpdateCountdown(value);
+	}
+}
+
 

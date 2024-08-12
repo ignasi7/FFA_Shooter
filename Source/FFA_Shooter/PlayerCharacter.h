@@ -112,6 +112,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stamina")
 	float StaminaDrainDelay;
+
+
 	
 
 public:	
@@ -120,6 +122,12 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	bool bIsInputEnabled;
+	void ChangeInputValidation(bool inputValidation);
+
+	// HUD public functions
+	void SetBlurVisibility(bool visible);
+	void UpdateCountdownValue(int32 value);
 
 	// Input basic movement functions
 	void Move(const FInputActionValue& Value);
@@ -148,6 +156,7 @@ public:
 	void EquipWeapon0();
 	void EquipWeapon1();
 	void EquipWeapon2();
+
 
 
 private:

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/TextBlock.h"
+#include "Components/BackgroundBlur.h"
 #include "Blueprint/UserWidget.h"
 #include "PlayerHUD.generated.h"
 
@@ -21,7 +22,8 @@ public:
     void UpdateMagazines(int32 RemainingMags);
     void UpdateHealth(int32 CurrentHealth, int32 MaxHealth);
     void UpdateStamina(int32 CurrentStamina, int32 MaxStamina);
-
+    void UpdateCountdown(int32 countdown);
+    void SetBackgroundBlurVisibility(bool visible);
 
 protected:
 
@@ -39,5 +41,11 @@ protected:
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* StaminaText;
+
+    UPROPERTY(meta = (BindWidget))
+    UBackgroundBlur* BackgroundBlurStart;
+
+    UPROPERTY(meta = (BindWidget))
+    UTextBlock* CountdownText;
 	
 };

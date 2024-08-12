@@ -16,14 +16,14 @@
 // Sets default values
 AAIEnemy::AAIEnemy()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
 
     // Set default values for health
     MaxHealth = 100.0f;
     CurrentHealth = MaxHealth;
 
-    CurrentDestination = GetActorLocation(); 
+    CurrentDestination = GetActorLocation();
     MovementRadius = 10000.0f;
 
 
@@ -32,7 +32,7 @@ AAIEnemy::AAIEnemy()
 // Called when the game starts or when spawned
 void AAIEnemy::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
     PlayAnimation(0);
 
@@ -128,4 +128,5 @@ void AAIEnemy::Die()
         AIController->UnPossess();
     }
 }
+
 

@@ -51,6 +51,7 @@ void AWeaponBase::BeginPlay()
         PlayerHUD->UpdateAmmo(CurrentAmmo, MagazineSize);
         PlayerHUD->UpdateMagazines(RemainingMagazines);
     }
+
 }
 
 void AWeaponBase::Tick(float DeltaTime)
