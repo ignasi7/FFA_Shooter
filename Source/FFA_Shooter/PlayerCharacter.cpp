@@ -44,6 +44,14 @@ APlayerCharacter::APlayerCharacter()
 	BaseRunSpeed = 600.0f; // Normal run speed
 	SprintSpeed = 1000.0f;  // Speed when sprinting
 
+	// Initialize stamina variables
+	MaxStamina = 100.0f;
+	CurrentStamina = MaxStamina;
+	StaminaDrainRate = 25.0f;
+	StaminaRegenerationRate = 30.0f;
+	StaminaDrainDelay = 0.1f;
+
+
 	// Initialize the sprinting state
 	bIsSprinting = false; // Not sprinting initially
 
@@ -66,6 +74,11 @@ APlayerCharacter::APlayerCharacter()
 	bIsAutomatic = false; 
 	FireRate = 0.1f;
 	LastFireTime = 0.0f;
+
+	PlayerHUD = nullptr;
+
+
+
 }
 
 // Called when the game starts or when spawned
@@ -121,6 +134,24 @@ void APlayerCharacter::Tick(float DeltaTime)
 	if (bIsFiringAutomatic && bIsAutomatic)
 	{
 		HandleFiring(DeltaTime);
+	}
+
+	if (bIsSprinting)
+	{
+		CurrentStamina -= StaminaDrainRate * DeltaTime;
+		CurrentStamina = FMath::Max(CurrentStamina, 0.0f);
+		PlayerHUD->UpdateStamina(CurrentStamina, MaxStamina);
+
+		if (CurrentStamina <= 0.0f)
+		{
+			StopSprinting();
+		}
+	}
+	else
+	{
+		CurrentStamina += StaminaRegenerationRate * DeltaTime;
+		CurrentStamina = FMath::Min(CurrentStamina, MaxStamina); 
+		PlayerHUD->UpdateStamina(CurrentStamina, MaxStamina);
 	}
 }
 
@@ -239,7 +270,7 @@ void APlayerCharacter::UpdateFOV(float DeltaTime)
 // Method to start sprinting
 void APlayerCharacter::StartSprinting()
 {
-	if (!IsAiming)
+	if (!IsAiming && CurrentStamina > 0.0f)
 	{
 		// Get the character's current velocity
 		FVector Velocity = GetCharacterMovement()->Velocity;
@@ -318,7 +349,6 @@ void APlayerCharacter::SpawnWeapons()
 
 void APlayerCharacter::EquipWeapon(int32 WeaponIndex)
 {
-	UE_LOG(LogTemp, Warning, TEXT("EquipWeapon called with WeaponIndex: %d"), WeaponIndex);
 
 	if (WeaponInventory.IsValidIndex(WeaponIndex))
 	{
@@ -336,9 +366,11 @@ void APlayerCharacter::EquipWeapon(int32 WeaponIndex)
 			FireRate = CurrentWeapon->FireRate;
 
 			CurrentWeapon->UpdateHUD();
+			UGameplayStatics::PlaySoundAtLocation(this, ChangeGunSound, GetActorLocation());
 
 		}	
 	}
+
 }
 
 void APlayerCharacter::EquipWeapon0()
@@ -363,7 +395,10 @@ void APlayerCharacter::StartShooting()
 		bIsFiringAutomatic = true;
 	}
 	else {
-		CurrentWeapon->Fire();
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->Fire();
+		}
 	}
 }
 

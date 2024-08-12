@@ -92,6 +92,26 @@ protected:
 
 	UPROPERTY()
 	UPlayerHUD* PlayerHUD;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon|Effects")
+	USoundBase* ChangeGunSound;
+
+	// -------------------------------------------------------------- STAMINA
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float MaxStamina;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stamina")
+	float CurrentStamina;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float StaminaDrainRate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float StaminaRegenerationRate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float StaminaDrainDelay;
 	
 
 public:	
@@ -145,6 +165,8 @@ private:
 	// Indicates whether the character is currently sprinting
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsSprinting;
+
+	
 
 	// -------------------------------------------------------------- FOV
 	// Normal FOV

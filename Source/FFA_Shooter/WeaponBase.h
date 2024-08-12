@@ -92,6 +92,9 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UParticleSystemComponent* ImpactFlashComponent;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UParticleSystemComponent* BloodImpactComponent;
+
     UPROPERTY()
     APlayerController* PlayerCharacterController;
 

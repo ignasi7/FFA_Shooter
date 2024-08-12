@@ -42,6 +42,6 @@ void UPlayerHUD::UpdateStamina(int32 CurrentStamina, int32 MaxStamina)
 {
     if (StaminaText)
     {
-        StaminaText->SetText(FText::FromString(FString::Printf(TEXT("%d / %d"), CurrentStamina, MaxStamina)));
+        StaminaText->SetText(FText::FromString(FString::Printf(TEXT("Stamina: %d / %d"), CurrentStamina, MaxStamina)));
     }
 }

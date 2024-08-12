@@ -4,6 +4,8 @@
 #include "PlayerHUD.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
+#include "AIEnemy.h"
+
 
 
 // Constructor
@@ -20,6 +22,9 @@ AWeaponBase::AWeaponBase()
 
     ImpactFlashComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ImpactFlash"));
     ImpactFlashComponent->bAutoActivate = false;
+
+    BloodImpactComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("BloodImpact"));
+    BloodImpactComponent->bAutoActivate = false;
 
     PlayerHUD = nullptr;
 
@@ -46,6 +51,11 @@ void AWeaponBase::BeginPlay()
         PlayerHUD->UpdateAmmo(CurrentAmmo, MagazineSize);
         PlayerHUD->UpdateMagazines(RemainingMagazines);
     }
+}
+
+void AWeaponBase::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
 }
 
 void AWeaponBase::Fire()
@@ -103,6 +113,23 @@ void AWeaponBase::Fire()
                     {
                         EndLocation = HitResult.ImpactPoint;
 
+                        if (AActor* HitActor = HitResult.GetActor())
+                        {
+                            if (Cast<AAIEnemy>(HitActor))
+                            {
+                                // The hit actor is an instance of AIEnemy
+                                UE_LOG(LogTemp, Warning, TEXT("Hit an AIEnemy!"));
+                                if (BloodImpactComponent)
+                                {
+                                    UParticleSystemComponent* BloodImpact = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodImpactComponent->Template, EndLocation);
+                                    if (BloodImpact)
+                                    {
+                                        BloodImpact->ActivateSystem(true);
+                                    }
+                                }
+                            }
+                        }
+
                         // Create a new particle system at each hit location
                         if (ImpactFlashComponent)
                         {
@@ -112,6 +139,8 @@ void AWeaponBase::Fire()
                                 ImpactFlash->ActivateSystem(true);
                             }
                         }
+
+
                     }
 
                     // Visualize the shot
