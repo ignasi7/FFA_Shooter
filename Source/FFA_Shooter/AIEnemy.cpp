@@ -4,6 +4,8 @@
 #include "AIEnemy.h"
 #include "NavigationSystem.h"
 #include "AIController.h"
+#include "MyGameMode.h"
+#include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
@@ -97,13 +99,15 @@ void AAIEnemy::PlayAnimation(int animation)
 
 void AAIEnemy::ReduceHealth(float damage)
 {
-
-    CurrentHealth -= damage;
-    FString HealthMessage = FString::Printf(TEXT("Current Health: %f"), CurrentHealth);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, HealthMessage);
-    if (CurrentHealth <= 0)
+    if (CurrentHealth > 0)
     {
-        Die();
+        CurrentHealth -= damage;
+        FString HealthMessage = FString::Printf(TEXT("Current Health: %f"), CurrentHealth);
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, HealthMessage);
+        if (CurrentHealth <= 0)
+        {
+            Die();
+        }
     }
 }
 
@@ -126,6 +130,12 @@ void AAIEnemy::Die()
     if (AIController)
     {
         AIController->UnPossess();
+    }
+
+    AMyGameMode* GameMode = Cast<AMyGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+    if (GameMode)
+    {
+        GameMode->IncreaseScore();
     }
 }
 

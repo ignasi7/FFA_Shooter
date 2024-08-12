@@ -2,10 +2,10 @@
 
 #include "MyGameMode.h"
 #include "PlayerCharacter.h"
-#include "AIEnemy.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
+#include "Engine/Engine.h" 
 #include "Engine/World.h"
 
 // Constructor de AMyGameMode
@@ -67,3 +67,19 @@ void AMyGameMode::EnableCharacterInput(bool bBlock)
         PlayerCharacterInstance->ChangeInputValidation(bBlock);
     }
 }
+
+int AMyGameMode::GetScore()
+{
+    return Score;
+}
+
+void AMyGameMode::IncreaseScore()
+{
+    Score++;
+    FString ScoreMessage = FString::Printf(TEXT("Current Score: %d"), Score);
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, ScoreMessage);
+
+
+
+}
+

@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include <iostream>
 #include "GameFramework/GameMode.h"
 #include "PlayerCharacter.h"
-#include "AIEnemy.h"
 #include "MyGameMode.generated.h"
 
 /**
@@ -49,8 +49,11 @@ public:
 	TSubclassOf<APlayerCharacter> PlayerCharacterClass;
 
 	// Reference to the AIEnemy class (assignable in Blueprint)
-	UPROPERTY(EditDefaultsOnly, Category = "GameMode")
-	TSubclassOf<AAIEnemy> AIEnemyClass;
+	/*UPROPERTY(EditDefaultsOnly, Category = "GameMode")
+	TSubclassOf<AAIEnemy> AIEnemyClass;*/
+
+	int GetScore();
+	void IncreaseScore();
 
 
 };
