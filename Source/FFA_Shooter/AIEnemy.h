@@ -43,6 +43,8 @@ private:
 
 	// Move to a random location in the nav mesh
 	void SetNextDestination();
+	void Respawn();
+
 	FVector CurrentDestination;
 	float MovementRadius;
 

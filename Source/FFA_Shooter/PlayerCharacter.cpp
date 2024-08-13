@@ -473,4 +473,10 @@ void APlayerCharacter::UpdateCountdownValue(int32 value)
 	}
 }
 
-
+void APlayerCharacter::UpdateScore(int32 score)
+{
+	if (PlayerHUD)
+	{
+		PlayerHUD->UpdateScore(score);
+	}
+}

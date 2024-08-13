@@ -8,6 +8,8 @@
 #include "Engine/Engine.h" 
 #include "Engine/World.h"
 
+
+
 // Constructor de AMyGameMode
 AMyGameMode::AMyGameMode()
 {
@@ -28,6 +30,10 @@ void AMyGameMode::BeginPlay()
     if (FoundActors.Num() > 0)
     {
         PlayerCharacterInstance = Cast<APlayerCharacter>(FoundActors[0]);
+        if (PlayerCharacterInstance)
+        {
+            PlayerCharacterInstance->UpdateScore(Score);
+        }
     }
 
 	EnableCharacterInput(false);
@@ -37,6 +43,7 @@ void AMyGameMode::BeginPlay()
 
 
 }
+
 
 void AMyGameMode::UnlockGame()
 {
@@ -76,10 +83,11 @@ int AMyGameMode::GetScore()
 void AMyGameMode::IncreaseScore()
 {
     Score++;
+    if (PlayerCharacterInstance)
+    {
+        PlayerCharacterInstance->UpdateScore(Score);
+    }
     FString ScoreMessage = FString::Printf(TEXT("Current Score: %d"), Score);
     GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, ScoreMessage);
-
-
-
 }
 

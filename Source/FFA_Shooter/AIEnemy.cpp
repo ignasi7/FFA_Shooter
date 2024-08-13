@@ -125,6 +125,7 @@ void AAIEnemy::Die()
     GetMesh()->SetSimulatePhysics(true);
     GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 
+
     // Desactiva el control por el AI Controller (si lo hay)
     AController* AIController = GetController();
     if (AIController)
@@ -137,6 +138,44 @@ void AAIEnemy::Die()
     {
         GameMode->IncreaseScore();
     }
+
+    FTimerHandle RespawnTimerHandle;
+    GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &AAIEnemy::Respawn, 5.0f, false);
 }
 
+void AAIEnemy::Respawn()
+{
+    CurrentHealth = MaxHealth;
+
+    GetMesh()->SetSimulatePhysics(false);
+    GetMesh()->SetCollisionProfileName(TEXT("CharacterMesh"));
+    GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+    SetActorRotation(FRotator::ZeroRotator);
+
+
+
+    UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+    if (NavSys)
+    {
+        FNavLocation RandomLocation;
+        FVector KnownPoint = FVector(-18.040562f, -22.498682f, 87.999998f); // Ajusta este punto a un lugar conocido sobre el suelo
+
+        if (NavSys->GetRandomPointInNavigableRadius(KnownPoint, MovementRadius, RandomLocation, nullptr))
+        {
+            FVector SpawnLocation = RandomLocation.Location;
+            SpawnLocation.Z = 90.0f;
+            SetActorLocation(SpawnLocation);
+            DrawDebugSphere(GetWorld(), SpawnLocation, 50.0f, 12, FColor::Green, false, 10.0f);
+        }
+    }
+
+    AAIController* AIController = Cast<AAIController>(GetController());
+    if (AIController)
+    {
+        AIController->Possess(this);
+    }
+
+    PlayAnimation(0); 
+    SetNextDestination();
+}
 

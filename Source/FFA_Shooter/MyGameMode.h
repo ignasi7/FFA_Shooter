@@ -53,7 +53,7 @@ public:
 	TSubclassOf<AAIEnemy> AIEnemyClass;*/
 
 	int GetScore();
-	void IncreaseScore();
+	void IncreaseScore();	
 
 
 };

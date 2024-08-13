@@ -70,4 +70,12 @@ void UPlayerHUD::UpdateCountdown(int32 countdown)
     }
 }
 
+void UPlayerHUD::UpdateScore(int32 score)
+{
+    if (ScoreText)
+    {
+        ScoreText->SetText(FText::FromString(FString::Printf(TEXT("SCORE: %d"), score)));
+    }
+}
+
 

@@ -128,6 +128,7 @@ public:
 	// HUD public functions
 	void SetBlurVisibility(bool visible);
 	void UpdateCountdownValue(int32 value);
+	void UpdateScore(int32 value);
 
 	// Input basic movement functions
 	void Move(const FInputActionValue& Value);

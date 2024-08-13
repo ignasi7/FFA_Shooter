@@ -23,6 +23,7 @@ public:
     void UpdateHealth(int32 CurrentHealth, int32 MaxHealth);
     void UpdateStamina(int32 CurrentStamina, int32 MaxStamina);
     void UpdateCountdown(int32 countdown);
+    void UpdateScore(int32 score);
     void SetBackgroundBlurVisibility(bool visible);
 
 protected:
@@ -41,6 +42,9 @@ protected:
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* StaminaText;
+
+    UPROPERTY(meta = (BindWidget))
+    UTextBlock* ScoreText;
 
     UPROPERTY(meta = (BindWidget))
     UBackgroundBlur* BackgroundBlurStart;
