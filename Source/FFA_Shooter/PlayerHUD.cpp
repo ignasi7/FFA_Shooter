@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "PlayerHUD.h"
 
 
@@ -78,4 +75,26 @@ void UPlayerHUD::UpdateScore(int32 score)
     }
 }
 
+void UPlayerHUD::UpdateReimainingTime(int32 time)
+{
+    if(RemainingTimetext)
+    {
+        RemainingTimetext->SetText(FText::FromString(FString::Printf(TEXT("Remaining Time: %d"), time)));
+    }
+}
 
+
+void UPlayerHUD::SetBackgroundBlurEndVisibility(bool visible, int32 score)
+{
+    if (BackgroundBlurEnd)
+    {
+        if (visible)
+        {
+            BackgroundBlurEnd->SetVisibility(ESlateVisibility::Visible);
+        }
+        else
+        {
+            BackgroundBlurEnd->SetVisibility(ESlateVisibility::Hidden);
+        }
+    }
+}

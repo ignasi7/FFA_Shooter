@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -8,9 +6,7 @@
 #include "PlayerCharacter.h"
 #include "MyGameMode.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class FFA_SHOOTER_API AMyGameMode : public AGameMode
 {
@@ -40,6 +36,11 @@ protected:
 
 	int32 Score;
 
+	int32 MaxGameTime;
+	int32 RemainingTime;
+
+	bool GameStarted;
+
 	APlayerCharacter* PlayerCharacterInstance;
 
 
@@ -48,12 +49,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "GameMode")
 	TSubclassOf<APlayerCharacter> PlayerCharacterClass;
 
-	// Reference to the AIEnemy class (assignable in Blueprint)
-	/*UPROPERTY(EditDefaultsOnly, Category = "GameMode")
-	TSubclassOf<AAIEnemy> AIEnemyClass;*/
-
 	int GetScore();
 	void IncreaseScore();	
-
+	void SpawnEnemy(FVector position);
 
 };

@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "AIEnemy.h"
 #include "NavigationSystem.h"
 #include "AIController.h"
@@ -11,27 +8,21 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/Controller.h"
-#include "GameFramework/CharacterMovementComponent.h" // Para usar GetCharacterMovement
+#include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h" 
 
 
-// Sets default values
 AAIEnemy::AAIEnemy()
 {
-    // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
 
-    // Set default values for health
     MaxHealth = 100.0f;
     CurrentHealth = MaxHealth;
 
     CurrentDestination = GetActorLocation();
     MovementRadius = 10000.0f;
-
-
 }
 
-// Called when the game starts or when spawned
 void AAIEnemy::BeginPlay()
 {
     Super::BeginPlay();
@@ -45,10 +36,8 @@ void AAIEnemy::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // Verifica si el enemigo ha llegado al destino actual
     if (CurrentDestination.IsZero() || FVector::Dist(GetActorLocation(), CurrentDestination) < 100.0f)
     {
-        // Si el destino actual está cerca, selecciona un nuevo destino
         SetNextDestination();
     }
 }
@@ -74,7 +63,7 @@ void AAIEnemy::SetNextDestination()
                 CurrentDestination = RandomLocation.Location;
                 AIController->MoveToLocation(CurrentDestination);
 
-                DrawDebugSphere(GetWorld(), CurrentDestination, 50.0f, 12, FColor::Red, true, -1.0f, 0, 2.0f);
+                //DrawDebugSphere(GetWorld(), CurrentDestination, 50.0f, 12, FColor::Red, true, -1.0f, 0, 2.0f);
 
                 PlayAnimation(1);
             }
@@ -86,7 +75,6 @@ void AAIEnemy::PlayAnimation(int animation)
 {
     // 0 for idle
     // 1 for running
-    // 2 for sprint
     if (Animations.Num() > 0)
     {
         USkeletalMeshComponent* MeshComponent = GetMesh();
@@ -102,8 +90,8 @@ void AAIEnemy::ReduceHealth(float damage)
     if (CurrentHealth > 0)
     {
         CurrentHealth -= damage;
-        FString HealthMessage = FString::Printf(TEXT("Current Health: %f"), CurrentHealth);
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, HealthMessage);
+        /*FString HealthMessage = FString::Printf(TEXT("Current Health: %f"), CurrentHealth);
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, HealthMessage);*/
         if (CurrentHealth <= 0)
         {
             Die();
@@ -114,19 +102,12 @@ void AAIEnemy::ReduceHealth(float damage)
 
 void AAIEnemy::Die()
 {
-    FString DeathMessage = FString::Printf(TEXT("Enemy %s has died"), *GetName());
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, DeathMessage);
-
-    // Desactiva el control del Character Movement Component
     GetCharacterMovement()->DisableMovement();
     GetCharacterMovement()->StopMovementImmediately();
 
-    // Activa el ragdoll
     GetMesh()->SetSimulatePhysics(true);
     GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 
-
-    // Desactiva el control por el AI Controller (si lo hay)
     AController* AIController = GetController();
     if (AIController)
     {
@@ -140,42 +121,29 @@ void AAIEnemy::Die()
     }
 
     FTimerHandle RespawnTimerHandle;
-    GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &AAIEnemy::Respawn, 5.0f, false);
+    GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle, this, &AAIEnemy::Respawn, 3.0f, false);
 }
 
 void AAIEnemy::Respawn()
 {
-    CurrentHealth = MaxHealth;
-
-    GetMesh()->SetSimulatePhysics(false);
-    GetMesh()->SetCollisionProfileName(TEXT("CharacterMesh"));
-    GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-    SetActorRotation(FRotator::ZeroRotator);
-
-
-
     UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
     if (NavSys)
     {
         FNavLocation RandomLocation;
-        FVector KnownPoint = FVector(-18.040562f, -22.498682f, 87.999998f); // Ajusta este punto a un lugar conocido sobre el suelo
+        FVector Origin = GetActorLocation();
 
-        if (NavSys->GetRandomPointInNavigableRadius(KnownPoint, MovementRadius, RandomLocation, nullptr))
+        if (NavSys->GetRandomPointInNavigableRadius(Origin, MovementRadius, RandomLocation, nullptr))
         {
             FVector SpawnLocation = RandomLocation.Location;
             SpawnLocation.Z = 90.0f;
-            SetActorLocation(SpawnLocation);
-            DrawDebugSphere(GetWorld(), SpawnLocation, 50.0f, 12, FColor::Green, false, 10.0f);
+            //DrawDebugSphere(GetWorld(), RandomLocation.Location, 50.0f, 12, FColor::Green, false, 10.0f);
+            AMyGameMode* GameMode = Cast<AMyGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+            if (GameMode)
+            {
+                GameMode->SpawnEnemy(SpawnLocation);
+            }
         }
     }
-
-    AAIController* AIController = Cast<AAIController>(GetController());
-    if (AIController)
-    {
-        AIController->Possess(this);
-    }
-
-    PlayAnimation(0); 
-    SetNextDestination();
+    Destroy();
 }
 

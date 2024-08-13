@@ -38,10 +38,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapons")
 	void SpawnWeapons();
 
+	UFUNCTION(BlueprintCallable, Category = "Weapons")
+	void SpawnEnemy(FVector position);	
+
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	void RestartLevel();
 
 	// -------------------------------------------------------------- Camera
 	// Spring Arm Component
@@ -82,6 +86,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	class UInputAction* Weapon3Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	class UInputAction* RestartAction;
 
 	// Input mapping context
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -127,8 +134,10 @@ public:
 
 	// HUD public functions
 	void SetBlurVisibility(bool visible);
+	void SetBlurEndVisibility(bool visible, int32 score);
 	void UpdateCountdownValue(int32 value);
 	void UpdateScore(int32 value);
+	void UpdateTimer(int32 value);
 
 	// Input basic movement functions
 	void Move(const FInputActionValue& Value);

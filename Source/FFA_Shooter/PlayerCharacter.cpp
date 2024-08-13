@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "PlayerCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -18,7 +15,6 @@
 
 APlayerCharacter::APlayerCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bIsInputEnabled = false;
 
@@ -82,21 +78,16 @@ APlayerCharacter::APlayerCharacter()
 
 }
 
-// Called when the game starts or when spawned
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Obtener el PlayerController actual de manera segura
 	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 
-	// Asegúrate de que el PlayerController es válido
 	if (PlayerController)
 	{
-		// Comienza la sección de creación del HUD
 		if (HUDClass)
 		{
-			// Crear y mostrar el widget HUD
 			PlayerHUD = CreateWidget<UPlayerHUD>(PlayerController, HUDClass);
 			if (PlayerHUD)
 			{
@@ -104,7 +95,6 @@ void APlayerCharacter::BeginPlay()
 			}
 		}
 
-		// Comienza la sección de configuración de InputSubsystem
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			if (InputMappingContext)
@@ -120,7 +110,6 @@ void APlayerCharacter::BeginPlay()
 	
 }
 
-// Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -212,6 +201,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		{
 			EnhancedInputComponent->BindAction(Weapon3Action, ETriggerEvent::Started, this, &APlayerCharacter::EquipWeapon2);
 		}
+		if (RestartAction)
+		{
+			EnhancedInputComponent->BindAction(RestartAction, ETriggerEvent::Started, this, &APlayerCharacter::RestartLevel);
+		}
 
 	}
 }
@@ -220,7 +213,6 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 {
 	if (bIsInputEnabled)
 	{
-		// Implement movement logic
 		FVector2D MovementVector = Value.Get<FVector2D>();
 		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
 		AddMovementInput(GetActorRightVector(), MovementVector.X);
@@ -253,12 +245,11 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 }
 
 
-// Start the FOV transition
 void APlayerCharacter::StartFOVTransition(float NewFOV, float Duration)
 {
 	TargetFOV = NewFOV;
 	CurrentTransitionDurationFOV = Duration;
-	ElapsedTimeTransitionFOV = 0.0f; // Reset elapsed time
+	ElapsedTimeTransitionFOV = 0.0f;
 }
 
 // Update the FOV gradually
@@ -279,38 +270,31 @@ void APlayerCharacter::UpdateFOV(float DeltaTime)
 	}
 }
 
-// Method to start sprinting
 void APlayerCharacter::StartSprinting()
 {
 	if (bIsInputEnabled)
 	{
 		if (!IsAiming && CurrentStamina > 0.0f)
 		{
-			// Get the character's current velocity
 			FVector Velocity = GetCharacterMovement()->Velocity;
-
-			// Calculate the magnitude of the velocity vector
 			float Speed = Velocity.Size();
-
-			// Define a minimum speed threshold for sprinting
-			const float MinimumSpeedThreshold = 1.0f; // Adjust this value as needed
+			const float MinimumSpeedThreshold = 1.0f; 
 
 			// Only start sprinting if the character is moving faster than the threshold
 			if (Speed > MinimumSpeedThreshold)
 			{
-				bIsSprinting = true; // Set the sprinting state to true
-				GetCharacterMovement()->MaxWalkSpeed = SprintSpeed; // Set character speed to sprint speed
+				bIsSprinting = true; 
+				GetCharacterMovement()->MaxWalkSpeed = SprintSpeed; 
 				StartFOVTransition(SprintFOV, TransitionDurationFOV);
 			}
 		}
 	}
 }
 
-// Method to stop sprinting
 void APlayerCharacter::StopSprinting()
 {
-	bIsSprinting = false; // Set the sprinting state to false
-	GetCharacterMovement()->MaxWalkSpeed = BaseRunSpeed; // Set character speed back to base walk speed
+	bIsSprinting = false; 
+	GetCharacterMovement()->MaxWalkSpeed = BaseRunSpeed;
 	if (!IsAiming)
 	{
 		StartFOVTransition(NormalFOV, TransitionDurationFOV);
@@ -340,7 +324,6 @@ void APlayerCharacter::StopAiming()
 	else
 	{
 		StartFOVTransition(NormalFOV, TransitionDurationFOV);
-
 	}
 }
 
@@ -385,7 +368,6 @@ void APlayerCharacter::EquipWeapon(int32 WeaponIndex)
 
 			CurrentWeapon->UpdateHUD();
 			UGameplayStatics::PlaySoundAtLocation(this, ChangeGunSound, GetActorLocation());
-
 		}	
 	}
 
@@ -414,7 +396,8 @@ void APlayerCharacter::StartShooting()
 		{
 			bIsFiringAutomatic = true;
 		}
-		else {
+		else 
+		{
 			if (CurrentWeapon)
 			{
 				CurrentWeapon->Fire();
@@ -454,7 +437,6 @@ void APlayerCharacter::Reload()
 void APlayerCharacter::ChangeInputValidation(bool inputValidation)
 {
 	bIsInputEnabled = inputValidation;
-	SetBlurVisibility(!inputValidation);
 }
 
 void APlayerCharacter::SetBlurVisibility(bool visible)
@@ -478,5 +460,43 @@ void APlayerCharacter::UpdateScore(int32 score)
 	if (PlayerHUD)
 	{
 		PlayerHUD->UpdateScore(score);
+	}
+}
+
+void APlayerCharacter::SpawnEnemy(FVector position)
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->SpawnEnemy(position);
+	}
+}
+
+void APlayerCharacter::UpdateTimer(int time)
+{
+	if (PlayerHUD)
+	{
+		PlayerHUD->UpdateReimainingTime(time);
+	}
+}
+
+void APlayerCharacter::SetBlurEndVisibility(bool visible, int32 score)
+{
+	if (PlayerHUD)
+	{
+		PlayerHUD->SetBackgroundBlurEndVisibility(visible,score);
+	}
+}
+
+
+void APlayerCharacter::RestartLevel()
+{
+	if (!bIsInputEnabled) // if not in middle of a game
+	{
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			FName CurrentLevelName = *World->GetMapName();
+			UGameplayStatics::OpenLevel(World, CurrentLevelName);
+		}
 	}
 }

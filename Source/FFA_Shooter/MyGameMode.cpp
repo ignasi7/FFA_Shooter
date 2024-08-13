@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyGameMode.h"
 #include "PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
@@ -14,6 +12,9 @@
 AMyGameMode::AMyGameMode()
 {
     StartTimeDelay = 10;
+    MaxGameTime = 60;
+    RemainingTime = MaxGameTime;
+    GameStarted = false;
     Score = 0;
     CurrentTimeDelay = StartTimeDelay;
     PlayerCharacterInstance = nullptr;
@@ -33,12 +34,13 @@ void AMyGameMode::BeginPlay()
         if (PlayerCharacterInstance)
         {
             PlayerCharacterInstance->UpdateScore(Score);
+            PlayerCharacterInstance->SetBlurEndVisibility(false, Score);
+
         }
     }
 
 	EnableCharacterInput(false);
 
-	//GetWorld()->GetTimerManager().SetTimer(StartGameTimerHandle, this, &AMyGameMode::UnlockGame, StartTimeDelay, false);
     GetWorld()->GetTimerManager().SetTimer(StartGameTimerHandle, this, &AMyGameMode::ManageCountdown, 1.0f, true);
 
 
@@ -48,20 +50,35 @@ void AMyGameMode::BeginPlay()
 void AMyGameMode::UnlockGame()
 {
 	// Unblock characters
+    GameStarted = true;
 	EnableCharacterInput(true);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("unlock game"));
-
 }
 
 void AMyGameMode::ManageCountdown() {
+
     PlayerCharacterInstance->UpdateCountdownValue(CurrentTimeDelay);
     --CurrentTimeDelay;
     if (CurrentTimeDelay < 0)
     {
-        EnableCharacterInput(true);
+        UnlockGame();
         if (PlayerCharacterInstance)
         {
             PlayerCharacterInstance->SetBlurVisibility(false);
+        }
+    }
+
+    if (GameStarted)
+    {
+        PlayerCharacterInstance->UpdateTimer(RemainingTime);
+        --RemainingTime;
+        if (RemainingTime <= 0)
+        {
+            if (PlayerCharacterInstance)
+            {
+                PlayerCharacterInstance->ChangeInputValidation(false);
+                PlayerCharacterInstance->SetBlurEndVisibility(true, Score);
+            }
+            GameStarted = false;
         }
     }
 }
@@ -87,7 +104,15 @@ void AMyGameMode::IncreaseScore()
     {
         PlayerCharacterInstance->UpdateScore(Score);
     }
-    FString ScoreMessage = FString::Printf(TEXT("Current Score: %d"), Score);
-    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, ScoreMessage);
+    /*FString ScoreMessage = FString::Printf(TEXT("Current Score: %d"), Score);
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, ScoreMessage);*/
+}
+
+void AMyGameMode::SpawnEnemy(FVector position)
+{
+    if (PlayerCharacterInstance)
+    {
+        PlayerCharacterInstance->SpawnEnemy(position);
+    }
 }
 

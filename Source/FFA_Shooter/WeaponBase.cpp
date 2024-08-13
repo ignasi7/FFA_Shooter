@@ -7,8 +7,6 @@
 #include "AIEnemy.h"
 
 
-
-// Constructor
 AWeaponBase::AWeaponBase()
 {
     PrimaryActorTick.bCanEverTick = true;
@@ -33,7 +31,6 @@ AWeaponBase::AWeaponBase()
 
 }
 
-// Called when the game starts or when spawned
 void AWeaponBase::BeginPlay()
 {
     Super::BeginPlay();
@@ -121,7 +118,6 @@ void AWeaponBase::Fire()
                             if (Enemy)
                             {
                                 // The hit actor is an instance of AIEnemy
-                                UE_LOG(LogTemp, Warning, TEXT("Hit an AIEnemy!"));
                                 Enemy->ReduceHealth(DamagePerShot);
 
                                 if (BloodImpactComponent)
@@ -147,9 +143,6 @@ void AWeaponBase::Fire()
 
 
                     }
-
-                    // Visualize the shot
-                    // DrawDebugLine(GetWorld(), CameraLocation, EndLocation, FColor::Red, false, 0.1f, 0, 1.0f);
                 }
 
             }
@@ -177,7 +170,6 @@ void AWeaponBase::Fire()
                         if (Enemy)
                         {
                             // The hit actor is an instance of AIEnemy
-                            UE_LOG(LogTemp, Warning, TEXT("Hit an AIEnemy!"));
                             Enemy->ReduceHealth(DamagePerShot);
 
                             if (BloodImpactComponent)
@@ -202,9 +194,6 @@ void AWeaponBase::Fire()
                     }
 
                 }
-
-                // Visualize the shot
-                // DrawDebugLine(GetWorld(), CameraLocation, EndLocation, FColor::Red, false, 0.1f, 0, 1.0f);
             }
         }
     }
@@ -228,7 +217,7 @@ void AWeaponBase::Reload()
 
     if (CurrentAmmo < MagazineSize && RemainingMagazines > 0)
     {
-        IsReloading = true; // Set the reloading flag
+        IsReloading = true; 
 
         const int32 AmmoToReload = MagazineSize - CurrentAmmo;
         const int32 AmmoAvailable = RemainingMagazines * MagazineSize;
@@ -309,3 +298,12 @@ FName AWeaponBase::GetWeaponName() const
         return FName("Unknown");
     }
 }
+
+void AWeaponBase::SpawnEnemy(FVector position)
+{
+    if (EnemyClass)
+    {
+        GetWorld()->SpawnActor<AAIEnemy>(EnemyClass, position, FRotator::ZeroRotator);
+    }
+}
+

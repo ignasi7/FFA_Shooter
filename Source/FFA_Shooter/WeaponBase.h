@@ -1,4 +1,3 @@
-// WeaponBase.h
 #pragma once
 
 #include "CoreMinimal.h"
@@ -99,6 +98,10 @@ public:
     UPROPERTY()
     APlayerController* PlayerCharacterController;
 
+    // Property to specify the class of enemy to spawn
+    UPROPERTY(EditDefaultsOnly, Category = "Spawning")
+    TSubclassOf<class AAIEnemy> EnemyClass;
+
 
     // Methods
     UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -122,5 +125,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "UI")
     void ResetFireAbility();
 
+    UFUNCTION(BlueprintCallable, Category = "UI")
+    void SpawnEnemy(FVector position);
 };
 

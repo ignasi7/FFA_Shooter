@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -8,9 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "PlayerHUD.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class FFA_SHOOTER_API UPlayerHUD : public UUserWidget
 {
@@ -24,7 +20,10 @@ public:
     void UpdateStamina(int32 CurrentStamina, int32 MaxStamina);
     void UpdateCountdown(int32 countdown);
     void UpdateScore(int32 score);
+    void UpdateReimainingTime(int32 time);
     void SetBackgroundBlurVisibility(bool visible);
+    void SetBackgroundBlurEndVisibility(bool visible, int32 score);
+
 
 protected:
 
@@ -50,6 +49,11 @@ protected:
     UBackgroundBlur* BackgroundBlurStart;
 
     UPROPERTY(meta = (BindWidget))
+    UBackgroundBlur* BackgroundBlurEnd;
+
+    UPROPERTY(meta = (BindWidget))
     UTextBlock* CountdownText;
 	
+    UPROPERTY(meta = (BindWidget))
+    UTextBlock* RemainingTimetext;
 };
