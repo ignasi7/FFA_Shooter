@@ -56,4 +56,7 @@ protected:
 	
     UPROPERTY(meta = (BindWidget))
     UTextBlock* RemainingTimetext;
+
+    UPROPERTY(meta = (BindWidget))
+    UTextBlock* FinalScoreText;
 };

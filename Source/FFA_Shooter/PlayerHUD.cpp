@@ -91,6 +91,7 @@ void UPlayerHUD::SetBackgroundBlurEndVisibility(bool visible, int32 score)
         if (visible)
         {
             BackgroundBlurEnd->SetVisibility(ESlateVisibility::Visible);
+            FinalScoreText->SetText(FText::FromString(FString::Printf(TEXT("Your score: %d"), score)));
         }
         else
         {
