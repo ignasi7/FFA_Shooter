@@ -129,19 +129,18 @@ void AWeaponBase::Fire()
                                     }
                                 }
                             }
-                        }
-                        else {
-                            if (ImpactFlashComponent)
+                            else
                             {
-                                UParticleSystemComponent* ImpactFlash = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactFlashComponent->Template, EndLocation);
-                                if (ImpactFlash)
+                                if (ImpactFlashComponent)
                                 {
-                                    ImpactFlash->ActivateSystem(true);
+                                    UParticleSystemComponent* ImpactFlash = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactFlashComponent->Template, EndLocation);
+                                    if (ImpactFlash)
+                                    {
+                                        ImpactFlash->ActivateSystem(true);
+                                    }
                                 }
                             }
-                        }                       
-
-
+                        }                 
                     }
                 }
 
